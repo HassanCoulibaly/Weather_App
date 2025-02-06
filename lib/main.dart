@@ -1,93 +1,92 @@
 import 'package:flutter/material.dart';
+import 'dart:math'; // For random number generation
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: DefaultTabController(
-        // manage the state of table interface
-        length: 3, // number of tabs. Tab view =3
-        child:
-            _TabsNonScrollableDemo(), // this is a stateful widget it mean it can be change
-      ),
-    );
-  }
+  State<MyApp> createState() => _MyAppState();
 }
 
-class _TabsNonScrollableDemo extends StatefulWidget {
-  @override
-  __TabsNonScrollableDemoState createState() => __TabsNonScrollableDemoState();
-}
+class _MyAppState extends State<MyApp> {
+  String cityName = '';
+  String temperature = '';
+  String weatherCondition = '';
+  List<String> forecast = []; // Store forecast data
 
-class __TabsNonScrollableDemoState extends State<_TabsNonScrollableDemo>
-    with SingleTickerProviderStateMixin, RestorationMixin {
-  late TabController _tabController;
+  void _fetchWeather() {
+    // Simulate weather data
+    Random random = Random();
+    int temp = 15 + random.nextInt(16); // Temperature between 15 and 30
+    List<String> conditions = ['Sunny', 'Cloudy', 'Rainy'];
+    String condition = conditions[random.nextInt(3)];
 
-  final RestorableInt tabIndex = RestorableInt(0);
-
-  @override
-  String get restorationId => 'tab_non_scrollable_demo';
-
-  @override
-  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
-    registerForRestoration(tabIndex, 'tab_index');
-    _tabController.index = tabIndex.value;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(
-      initialIndex: 0,
-      length: 3,
-      vsync: this,
-    );
-    _tabController.addListener(() {
-      setState(() {
-        tabIndex.value = _tabController.index;
-      });
+    setState(() {
+      temperature = '$temp°C';
+      weatherCondition = condition;
     });
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    tabIndex.dispose();
-    super.dispose();
+  void _fetch7DayForecast() {
+    forecast = List.generate(
+        7,
+        (index) => 'Day ${index + 1}: ${Random().nextInt(25) + 15}°C, ${[
+              'Sunny',
+              'Cloudy',
+              'Rainy'
+            ][Random().nextInt(3)]}');
+    setState(() {}); // Trigger rebuild to show forecast
   }
 
   @override
   Widget build(BuildContext context) {
-    final tabs = ['Cat', 'Dog', 'Bird'];
-    // reaction of each animal that I designed
-    final reac = ['Mew', 'Barf', 'Tweet'];
+    return MaterialApp(
+      title: 'Weather Info App',
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Weather Info'),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: <Widget>[
+              TextField(
+                onChanged: (value) {
+                  cityName = value;
+                },
+                decoration: const InputDecoration(
+                  labelText: 'Enter City Name',
+                ),
+              ),
+              ElevatedButton(
+                onPressed: _fetchWeather,
+                child: const Text('Fetch Weather'),
+              ),
+              ElevatedButton(
+                onPressed: _fetch7DayForecast,
+                child: const Text('Fetch 7-Day Forecast'),
+              ),
+              const SizedBox(height: 20), // Spacing
+              Text('City: $cityName', style: const TextStyle(fontSize: 18)),
+              Text('Temperature: $temperature',
+                  style: const TextStyle(fontSize: 18)),
+              Text('Weather: $weatherCondition',
+                  style: const TextStyle(fontSize: 18)),
 
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text(
-          'Weather App',
+              const SizedBox(height: 20),
+              const Text("7-Day Forecast:",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Column(
+                // Or ListView.builder for a scrollable list if needed
+                children: forecast.map((day) => Text(day)).toList(),
+              ),
+            ],
+          ),
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: false,
-          tabs: [
-            for (final tab in tabs) Tab(text: tab),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          for (final tab in reac)
-            Center(
-              child: Text(tab),
-            ),
-        ],
       ),
     );
   }
